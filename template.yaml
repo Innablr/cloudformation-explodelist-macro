@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CloudFormation Explode List Macro
+
+Resources:
+  ExplodeListMacroFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: explodelist/
+      Handler: macro.handler
+      Runtime: nodejs12.x
+    Environment:
+      Variables:
+        VERBOSE_ERRORS: true
+
+Outputs:
+  ExplodeListMacroFunction:
+    Description: "ExplodeList Macro Lambda Function ARN"
+    Value: !GetAtt ExplodeListMacroFunction.Arn
+  ExplodeListMacroFunctionIamRole:
+    Description: "ExplodeList Macro Lambda Role ARN"
+    Value: !GetAtt ExplodeListMacroFunctionRole.Arn

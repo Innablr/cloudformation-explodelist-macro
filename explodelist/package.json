@@ -1,0 +1,21 @@
+{
+  "name": "cloudformation-explodelist-macro",
+  "version": "0.1.0",
+  "description": "AWS CloudFormation Explode List Macro",
+  "main": "macro.js",
+  "repository": "https://github.com/innablr/cloudformation-explodelist-macro",
+  "author": "Hamid Nazari",
+  "license": "ISC",
+  "dependencies": {
+    "js-yaml": "^3.13.1",
+    "adler-32": "^1.2.0",
+    "traverse": "^0.6.6"
+  },
+  "scripts": {
+    "test": "mocha tests/unit/"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^7.1.0"
+  }
+}

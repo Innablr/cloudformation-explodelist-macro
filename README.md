@@ -28,21 +28,21 @@ And here's the output which is then sent to CloudFormation for deployment.
 AWSTemplateFormatVersion: "2010-09-09"
 
 Resources:
-  TestRoute_edb024d:
+  TestRouteedb024d:
     Type: AWS::EC2::Route
     Properties:
       DestinationCidrBlock: 10.0.48.0/24
       TransitGatewayId: tgw-a1b2c3d4
       RouteTableId: rtb-a1b2c3e4
 
-  TestRoute_11180275:
+  TestRoute11180275:
     Type: AWS::EC2::Route
     Properties:
       DestinationCidrBlock: 10.0.112.0/24
       TransitGatewayId: tgw-a1b2c3d4
       RouteTableId: rtb-a1b2c3e4
 
-  TestRoute_115a027f:
+  TestRoute115a027f:
     Type: AWS::EC2::Route
     Properties:
       DestinationCidrBlock: 10.0.176.0/24

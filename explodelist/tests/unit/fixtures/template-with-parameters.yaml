@@ -11,7 +11,7 @@ Parameters:
     Default: vpc-a1b2c3d4
 
 Resources:
-  TestRouteTable:
+  RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: "!Ref TestVpcId"
@@ -22,4 +22,4 @@ Resources:
     Properties:
       DestinationCidrBlock: "!InsListItem"
       TransitGatewayId: tgw-a1b2c3d4
-      RouteTableId: "!Ref TestRouteTable"
+      RouteTableId: "!Ref RouteTable"

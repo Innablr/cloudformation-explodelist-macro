@@ -9,13 +9,14 @@ const deepcopy = (object) => {
     return JSON.parse(JSON.stringify(object));
 }
 
-const transform_resource = async(resource_name, resource, list) => {
+const transform_resource = (resource_name, resource, list) => {
     let new_resources = {};
 
-    await list.forEach(item => {
+    list.forEach(item => {
         let item_hash = hash(item);
         let new_resource_name = resource_name + item_hash;
         let new_resource = deepcopy(resource);
+        delete new_resource.ExplodeList;
 
         traverse(new_resource).forEach(function(node) {
             if (node == "!InsListItem") {
@@ -37,6 +38,7 @@ const transform = (fragment, params) => {
 
     Object.keys(resources).forEach(resource_name => {
         const resource = resources[resource_name];
+        let new_resources = {};
 
         if (!resource.ExplodeList) {
             Object.assign(new_fragment.Resources, {[resource_name]: resource});
@@ -49,7 +51,7 @@ const transform = (fragment, params) => {
         let list = RefList_match ? params[RefList_match.groups.token] : resource.ExplodeList;
 
         if (!list || list.length <= 0) {
-            throw new Error(`No list has been provided to resource: '${resource_name}'.`)
+            return;
         }
 
         if (!Array.isArray(list)) {
@@ -64,7 +66,7 @@ const transform = (fragment, params) => {
     return new_fragment;
 }
 
-exports.handler = async(event, context) => {
+exports.handler = (event, context) => {
     try {
         fragment = event.fragment;
         params = event.templateParameterValues;

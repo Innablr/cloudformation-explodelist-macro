@@ -7,60 +7,45 @@ const yaml = require('js-yaml');
 
 const expect = chai.expect;
 
-let templateFile = fs.readFileSync('tests/unit/fixtures/template.yaml');
+let templateFile = fs.readFileSync('tests/unit/fixtures/template-with-parameters.yaml');
 let event = {'requestId': 'abcdef12-3456-7890-abcd-ef1234567890'};
 let context = {};
 
 event['fragment'] = yaml.safeLoad(templateFile);
 
 describe('Tests ExplodeList Macro', function () {
-    it('verifies successful response with csv string', async () => {
-        let result;
-        event['templateParameterValues'] = {"TestRoutes": "10.0.48.0/24,10.0.112.0/24,10.0.176.0/24"}
-        result = await macro.handler(event, context)
-        expect(result).to.be.an('object');
-        expect(result.status).to.be.equal('success');
-    });
+    [{ desc: 'a csv string',
+        value: {TestRoutes: '10.0.48.0/24,10.0.112.0/24,10.0.176.0/24'}},
+      { desc: 'a string with only one item',
+        value: {TestRoutes: '10.0.48.0/24,10.0.112.0/24,10.0.176.0/24'}},
+      { desc: 'an empty string',
+        value: {TestRoutes: '10.0.48.0/24,10.0.112.0/24,10.0.176.0/24'}},
+      { desc: 'no parameter',
+        value: ''}
+    ].forEach(input => {
+        it(`verifies appropriate response with ${input.desc}`, async () => {
+            event['templateParameterValues'] = input.value;
+            let result = await macro.handler(event, context);
+            let route_keys = Object.keys(result.fragment.Resources).filter(x => x.startsWith('TestRoute'));
+            let route_count = 0;
 
-    it('verifies successful response with array of strings', async () => {
-        let result;
-        event['templateParameterValues'] = {"TestRoutes": ["10.0.48.0/24", "10.0.112.0/24", "10.0.176.0/24"]}
-        result = await macro.handler(event, context)
-        expect(result).to.be.an('object');
-        expect(result.status).to.be.equal('success');
-    });
+            if (event.templateParameterValues.TestRoutes) {
+                route_count = event.templateParameterValues.TestRoutes.split(',').length;
+            }
 
-    it('verifies failure response if no list is provided', async () => {
-        let result;
-        event['templateParameterValues'] = {}
-        result = await macro.handler(event, context)
-        expect(result).to.be.an('object');
-        expect(result.status).to.be.equal('failure');
-    });
+            expect(result).to.be.an('object');
+            expect(result.status).to.be.equal('success');
+            expect(Object.keys(result.fragment.Resources)).to.have.lengthOf(route_count + 1);
+            expect(result.fragment.Resources.RouteTable).to.be.an('object');
 
-    it('verifies failure response if a list with no item is provided', async () => {
-        let result;
-        event['templateParameterValues'] = {"TestRoutes": ''}
-        result = await macro.handler(event, context)
-        expect(result).to.be.an('object');
-        expect(result.status).to.be.equal('failure');
-
-        event['templateParameterValues'] = {"TestRoutes": []}
-        result = await macro.handler(event, context)
-        expect(result).to.be.an('object');
-        expect(result.status).to.be.equal('failure');
-    });
-
-    it('verifies successful response if a list with one item is provided', async () => {
-        let result;
-        event['templateParameterValues'] = {"TestRoutes": '10.0.48.0/24'}
-        result = await macro.handler(event, context)
-        expect(result).to.be.an('object');
-        expect(result.status).to.be.equal('success');
-
-        event['templateParameterValues'] = {"TestRoutes": ['10.0.48.0/24']}
-        result = await macro.handler(event, context)
-        expect(result).to.be.an('object');
-        expect(result.status).to.be.equal('success');
+            if (route_count > 0) {
+                route_keys.forEach(k => {
+                    let v = result.fragment.Resources[k];
+                    expect(v).to.be.an('object');
+                    expect(v.ExplodeList).to.be.an('undefined');
+                    expect(v.Properties.DestinationCidrBlock).not.be.equal('!InsListItem');
+                });
+            }
+        });
     });
 });

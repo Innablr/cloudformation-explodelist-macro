@@ -42,6 +42,12 @@ describe('Tests ExplodeList Macro', () => {
     routesCount: 6,
     templateFile: 'template-with-strings.yaml',
   },
+  {
+    desc: 'all kinds mixed up',
+    value: { TestRoutes: '10.0.48.0/24,10.0.112.0/24,10.0.176.0/24' },
+    routesCount: 15,
+    templateFile: 'template-with-all.yaml',
+  },
   ].forEach((input) => {
     it(`verifies appropriate response with ${input.desc}`, async () => {
       const templateFile = fs.readFileSync(`tests/unit/fixtures/${input.templateFile}`);
@@ -50,7 +56,7 @@ describe('Tests ExplodeList Macro', () => {
 
       const { TestRoutes } = event.templateParameterValues;
       let routesCount = input.routesCount || 0;
-      if (TestRoutes) {
+      if (!routesCount && TestRoutes) {
         routesCount = TestRoutes.split(',').length;
       }
 

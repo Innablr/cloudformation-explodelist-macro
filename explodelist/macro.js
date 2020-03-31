@@ -1,93 +1,86 @@
 const traverse = require('traverse');
-const adler32 = require('adler-32')
+const adler32 = require('adler-32');
 
-const hash = (value) => {
-    return adler32.str(value).toString(16);
-}
+const hash = (value) => adler32.str(value).toString(16);
 
-const deepcopy = (object) => {
-    return JSON.parse(JSON.stringify(object));
-}
+const deepcopy = (object) => JSON.parse(JSON.stringify(object));
 
-const transform_resource = (resource_name, resource, list) => {
-    let new_resources = {};
+const transformResource = (resourceName, resource, list) => {
+  const newResources = {};
 
-    list.forEach(item => {
-        let item_hash = hash(item);
-        let new_resource_name = resource_name + item_hash;
-        let new_resource = deepcopy(resource);
-        delete new_resource.ExplodeList;
+  list.forEach((item) => {
+    const newResourceName = resourceName + hash(item);
+    const newResource = deepcopy(resource);
+    delete newResource.ExplodeList;
 
-        traverse(new_resource).forEach(function(node) {
-            if (node == "!InsListItem") {
-                this.update(item)
-            }
-        });
-
-        new_resources[new_resource_name] = new_resource;
-    })
-
-    return new_resources;
-}
-
-const transform = (fragment, params) => {
-    let new_fragment = deepcopy(fragment);
-    new_fragment.Resources = {};
-
-    let resources = fragment.Resources;
-
-    Object.keys(resources).forEach(resource_name => {
-        const resource = resources[resource_name];
-        let new_resources = {};
-
-        if (!resource.ExplodeList) {
-            Object.assign(new_fragment.Resources, {[resource_name]: resource});
-            return;
-        }
-
-        const RefList_re = /^(?:\!RefList)\s+(?<token>[A-Za-z0-9]+)/
-        const RefList_match = resource.ExplodeList.match(RefList_re)
-
-        let list = RefList_match ? params[RefList_match.groups.token] : resource.ExplodeList;
-
-        if (!list || list.length <= 0) {
-            return;
-        }
-
-        if (!Array.isArray(list)) {
-            list = list.split(',')
-        }
-
-        new_resources = transform_resource(resource_name, resource, list);
-
-        Object.assign(new_fragment.Resources, new_resources);
+    traverse(newResource).forEach(function (node) { // eslint-disable-line func-names
+      if (node === '!InsListItem') {
+        this.update(item);
+      }
     });
 
-    return new_fragment;
-}
+    newResources[newResourceName] = newResource;
+  });
 
-exports.handler = (event, context) => {
-    try {
-        fragment = event.fragment;
-        params = event.templateParameterValues;
-        status = "success";
+  return newResources;
+};
 
-        fragment = transform(fragment, params);
-    } catch (err) {
-        if (process.env.VERBOSE_ERRORS === 'true') {
-            console.error(err);
-        }
+const transform = (fragment, params) => {
+  const newFragment = deepcopy(fragment);
+  newFragment.Resources = {};
 
-        status = "failure"
+  const resources = fragment.Resources;
+
+  Object.keys(resources).forEach((resourceName) => {
+    const resource = resources[resourceName];
+    let newResources = {};
+
+    if (!resource.ExplodeList) {
+      Object.assign(newFragment.Resources, { [resourceName]: resource });
+      return;
     }
 
-    response = {
-        'requestId': event.requestId,
-        'status': status,
-        'fragment': fragment
+    const RefListRe = /^(?:!RefList)\s+(?<token>[A-Za-z0-9]+)/;
+    const RefListMatch = resource.ExplodeList.match(RefListRe);
+
+    let list = RefListMatch ? params[RefListMatch.groups.token] : resource.ExplodeList;
+
+    if (!list || list.length <= 0) {
+      return;
     }
 
-    console.debug(response.fragment)
+    if (!Array.isArray(list)) {
+      list = list.split(',');
+    }
 
-    return response
+    newResources = transformResource(resourceName, resource, list);
+
+    Object.assign(newFragment.Resources, newResources);
+  });
+
+  return newFragment;
+};
+
+exports.handler = (event, context) => { // eslint-disable-line no-unused-vars
+  let { fragment } = event;
+  const { templateParameterValues: params } = event;
+  let status = 'failure';
+
+  try {
+    fragment = transform(fragment, params);
+    delete fragment.Transform;
+    status = 'success';
+  } catch (err) {
+    if (process.env.VERBOSE_ERRORS === 'true') {
+      console.error(err); // eslint-disable-line no-console
+    }
+  }
+
+  const response = {
+    requestId: event.requestId,
+    status,
+    fragment,
+  };
+
+  return response;
 };

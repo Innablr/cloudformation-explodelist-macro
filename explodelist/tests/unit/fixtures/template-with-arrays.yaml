@@ -2,9 +2,6 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: ExplodeList
 
 Parameters:
-  TestRoutes:
-    Type: CommaDelimitedList
-    Description: A list of CIDR blocks to be routed
   TestVpcId:
     Type: AWS::EC2::VPC::Id
     Description: The VPC ID which the RouteTable belongs to
@@ -18,7 +15,13 @@ Resources:
 
   TestRoute:
     Type: AWS::EC2::Route
-    ExplodeList: "192.168.0.0/24,192.168.1.0/24,192.168.2.0/24,192.168.3.0/24,192.168.4.0/24,192.168.5.0/24"
+    ExplodeList:
+      - 172.16.0.0/24
+      - 172.16.1.0/24
+      - 172.16.2.0/24
+      - 172.16.3.0/24
+      - 172.16.4.0/24
+      - 172.16.5.0/24
     Properties:
       DestinationCidrBlock: "!InsListItem"
       TransitGatewayId: tgw-a1b2c3d4

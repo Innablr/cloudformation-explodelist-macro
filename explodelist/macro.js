@@ -2,7 +2,6 @@ const traverse = require('traverse');
 const adler32 = require('adler-32');
 
 const hash = (value) => adler32.str(value).toString(16);
-
 const deepcopy = (object) => JSON.parse(JSON.stringify(object));
 
 const transformResource = (resourceName, resource, list) => {
@@ -40,8 +39,11 @@ const transform = (fragment, params) => {
       return;
     }
 
-    const RefListRe = /^(?:!RefList)\s+(?<token>[A-Za-z0-9]+)/;
-    const RefListMatch = resource.ExplodeList.match(RefListRe);
+    let RefListMatch;
+    if (typeof resource.ExplodeList === 'string') {
+      const RefListRe = /^(?:!RefList)\s+(?<token>[A-Za-z0-9]+)/;
+      RefListMatch = resource.ExplodeList.match(RefListRe);
+    }
 
     let list = RefListMatch ? params[RefListMatch.groups.token] : resource.ExplodeList;
 

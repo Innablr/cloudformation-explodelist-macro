@@ -66,7 +66,6 @@ describe('Tests ExplodeList Macro', () => {
 
       expect(result).to.be.an('object');
       expect(result.status).to.be.equal('success');
-      expect(result.fragment.Transform).to.be.an('undefined');
       expect(newResourceNames).to.have.lengthOf(routesCount + 1);
       expect(result.fragment.Resources.RouteTable).to.be.an('object');
 

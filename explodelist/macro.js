@@ -41,8 +41,8 @@ const transform = (fragment, params) => {
 
     let RefListMatch;
     if (typeof resource.ExplodeList === 'string') {
-      const RefListRe = /^(?:!RefList)\s+(?<token>[A-Za-z0-9]+)/;
-      RefListMatch = resource.ExplodeList.match(RefListRe);
+      const RefListRE = /^(?:!RefList)\s+(?<token>[A-Za-z0-9]+)/;
+      RefListMatch = resource.ExplodeList.match(RefListRE);
     }
 
     let list = RefListMatch ? params[RefListMatch.groups.token] : resource.ExplodeList;
@@ -63,14 +63,13 @@ const transform = (fragment, params) => {
   return newFragment;
 };
 
-exports.handler = (event, context) => { // eslint-disable-line no-unused-vars
-  let { fragment } = event;
-  const { templateParameterValues: params } = event;
+exports.handler = async (event, context) => { // eslint-disable-line no-unused-vars
+  const { fragment, templateParameterValues: params } = event;
   let status = 'failure';
+  let newFragment;
 
   try {
-    fragment = transform(fragment, params);
-    delete fragment.Transform;
+    newFragment = transform(fragment, params);
     status = 'success';
   } catch (err) {
     if (process.env.VERBOSE_ERRORS === 'true') {
@@ -81,7 +80,7 @@ exports.handler = (event, context) => { // eslint-disable-line no-unused-vars
   const response = {
     requestId: event.requestId,
     status,
-    fragment,
+    fragment: newFragment,
   };
 
   return response;
